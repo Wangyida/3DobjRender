@@ -211,8 +211,7 @@ int main( int argc, char * argv [] )
   int cnt_img;
   /* Real random related to time */
   srand((int)time(0));
-  double dist_shift_factor=0.06, shift_x, shift_y, shift_z;
-  double dist_cam_factor=3;
+  double dist_shift_factor=0.06, shift_x, shift_y, shift_z, dist_cam_factor;
   do
   {
 	cnt_img = 0;
@@ -224,6 +223,7 @@ int main( int argc, char * argv [] )
 	  shift_x = rand()%10*dist_shift_factor;
 	  shift_y = rand()%10*dist_shift_factor;
 	  shift_z = rand()%10*dist_shift_factor;
+    dist_cam_factor = 2 * (rand()%3+1);
 	  ren->GetActiveCamera()->SetFocalPoint(shift_x,shift_y,shift_z);
 	  ren->GetActiveCamera()->SetPosition(campos.at(pose).x*dist_cam_factor,campos.at(pose).z*dist_cam_factor,campos.at(pose).y*dist_cam_factor);
 	  if (frontalLight == 1) {
