@@ -3,7 +3,7 @@
 #include "vtkRenderWindow.h"
 #include "vtkRenderWindowInteractor.h"
 #include "vtkOBJImporter.h"
-#include "vtkPNGWriter.h"
+#include "vtkJPEGWriter.h"
 #include "vtkPlane.h"
 #include "vtkPlaneSource.h"
 #include "vtkPointData.h"
@@ -59,7 +59,7 @@ void listDir(const char *path, std::vector<String>& files, bool r)
 int main( int argc, char * argv [] )
 {
   const String keys = "{help | | demo :$ ./sphereview_test -ite_depth=2 -plymodel=../data/3Dmodel/ape.ply -imagedir=../data/images_all/ -labeldir=../data/label_all.txt -num_class=6 -label_class=0, then press 'q' to run the demo for images generation when you see the gray background and a coordinate.}"
-  "{ite_depth | 3 | Iteration of sphere generation, suggested: 3.}"
+  "{ite_depth | 2 | Iteration of sphere generation, suggested: 2.}"
   "{objmodel | | Path of the '.obj' file for image rendering. }"
   "{mtlmodel | | Path of the '.mtl' file for image rendering. }"
   "{texmodel | | Path of the texture file for image rendering. }"
@@ -77,7 +77,7 @@ int main( int argc, char * argv [] )
   "{rgb_use | 0 | Use RGB image or grayscale. }"
   "{num_class | 12 | Total number of classes of models. }"
   "{view_region | 0 | Take a special view of front or back angle}"
-  "{frontalLight | 0 | Frontal light to from camera}";
+  "{frontalLight | 1 | Frontal light to from camera}";
   /* Get parameters from comand line. */
   cv::CommandLineParser parser(argc, argv, keys);
   parser.about("Generating training data for CNN with triplet loss");
@@ -174,13 +174,51 @@ int main( int argc, char * argv [] )
   atext->InterpolateOn();
   ren->SetBackground(0,0,0);
   ren->SetBackgroundTexture(atext); //add background
-  vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
+  vtkSmartPointer<vtkJPEGWriter> writer = vtkSmartPointer<vtkJPEGWriter>::New();
   vtkSmartPointer<vtkWindowToImageFilter> wintoimg = vtkSmartPointer<vtkWindowToImageFilter>::New();
   wintoimg->SetInput(renWin);
   writer->SetInputConnection(wintoimg->GetOutputPort());
   vtkSmartPointer<vtkLight> myLight= vtkSmartPointer<vtkLight>::New();
-  myLight->SetColor(1,1,1);
-  
+  myLight->SetIntensity(0);
+  switch (label_class) {
+    case 1:
+      myLight->SetColor(1,0,0);
+      break; 
+    case 2:
+      myLight->SetColor(0,1,0);
+      break; 
+    case 3:
+      myLight->SetColor(0,0,1);
+      break; 
+    case 4:
+      myLight->SetColor(1,1,0);
+      break; 
+    case 5:
+      myLight->SetColor(1,0,1);
+      break; 
+    case 6:
+      myLight->SetColor(0,1,1);
+      break; 
+    case 7:
+      myLight->SetColor(1,0,0.5);
+      break; 
+    case 8:
+      myLight->SetColor(0,0.5,1);
+      break; 
+    case 9:
+      myLight->SetColor(0,1,0.5);
+      break; 
+    case 10:
+      myLight->SetColor(0.5,1,0);
+      break; 
+    case 11:
+      myLight->SetColor(1,0.5,0);
+      break; 
+    case 12:
+      myLight->SetColor(0.5,0,1);
+      break; 
+  }
+
   if (frontalLight == 1) ren->AddLight(myLight);
   
   char temp[128];
@@ -211,7 +249,7 @@ int main( int argc, char * argv [] )
   int cnt_img;
   /* Real random related to time */
   srand((int)time(0));
-  double dist_shift_factor=0.06, shift_x, shift_y, shift_z, dist_cam_factor;
+  double dist_shift_factor=0.04, shift_x, shift_y, shift_z, dist_cam_factor;
   do
   {
 	cnt_img = 0;
@@ -220,21 +258,19 @@ int main( int argc, char * argv [] )
 	  label_x = static_cast<int>(campos.at(pose).x*100);
 	  label_y = static_cast<int>(campos.at(pose).y*100);
 	  label_z = static_cast<int>(campos.at(pose).z*100);
-	  shift_x = rand()%10*dist_shift_factor;
-	  shift_y = rand()%10*dist_shift_factor;
-	  shift_z = rand()%10*dist_shift_factor;
-    dist_cam_factor = 2 * (rand()%3+1);
+	  shift_x = (rand()%15-7)*dist_shift_factor;
+	  shift_y = (rand()%15-7)*dist_shift_factor;
+	  shift_z = (rand()%15-7)*dist_shift_factor;
+    dist_cam_factor = (rand()%5+11)/5;
 	  ren->GetActiveCamera()->SetFocalPoint(shift_x,shift_y,shift_z);
 	  ren->GetActiveCamera()->SetPosition(campos.at(pose).x*dist_cam_factor,campos.at(pose).z*dist_cam_factor,campos.at(pose).y*dist_cam_factor);
 	  if (frontalLight == 1) {
-  		myLight->SetPosition(campos.at(pose).x*dist_cam_factor*10,campos.at(pose).z*dist_cam_factor*10,campos.at(pose).y*dist_cam_factor*10);
-		myLight->SetFocalPoint(ren->GetActiveCamera()->GetFocalPoint());
-  		myLight->SetIntensity(50);
+  		myLight->SetIntensity(0);
 	  }
 	  sprintf (temp,"%02i_%02i_%03i", label_class, label_item, cnt_img);
 	  /* Photo */
 	  String filename = temp;
-	  filename += ".png";
+	  filename += ".jpg";
 	  imglabel << filename << ' ' << label_class << endl;
 	  filename = imagedir_p + filename;
 	  imReader->SetFileName(name_bkg_p.at(rand()%name_bkg_p.size()).c_str());
@@ -248,8 +284,14 @@ int main( int argc, char * argv [] )
   
 	  iren->Initialize();
 	  /* Object */
+    if (frontalLight == 1) {
+      myLight->SetPosition(campos.at(pose).x*dist_cam_factor*10,campos.at(pose).z*dist_cam_factor*10,campos.at(pose).y*dist_cam_factor*10);
+      myLight->SetFocalPoint(0, 0, 0);
+      // myLight->SetFocalPoint(ren->GetActiveCamera()->GetFocalPoint());
+      myLight->SetIntensity(100);
+    }
 	  filename = temp;
-	  filename += ".png";
+	  filename += ".jpg";
 	  imglabel << filename << ' ' << label_class << endl;
 	  filename = imagedir_o + filename;
 	  imReader->SetFileName(name_bkg_o.at(rand()%name_bkg_o.size()).c_str());
