@@ -106,6 +106,7 @@ int main( int argc, char * argv [] )
   int view_region = parser.get<int>("view_region");
   int frontalLight = parser.get<int>("frontalLight");
   double bg_dist, y_range;
+  int pure_surface = 0;
   y_range = 0.25;
   cv::cnn_3dobj::icoSphere ViewSphere(10,ite_depth);
   std::vector<cv::Point3d> campos;
@@ -258,9 +259,9 @@ int main( int argc, char * argv [] )
 	  label_x = static_cast<int>(campos.at(pose).x*100);
 	  label_y = static_cast<int>(campos.at(pose).y*100);
 	  label_z = static_cast<int>(campos.at(pose).z*100);
-	  shift_x = (rand()%15-7)*dist_shift_factor;
-	  shift_y = (rand()%15-7)*dist_shift_factor;
-	  shift_z = (rand()%15-7)*dist_shift_factor;
+	  shift_x = (rand()%13-6)*dist_shift_factor;
+	  shift_y = (rand()%13-6)*dist_shift_factor;
+	  shift_z = (rand()%13-6)*dist_shift_factor;
     dist_cam_factor = (rand()%5+11)/5;
 	  ren->GetActiveCamera()->SetFocalPoint(shift_x,shift_y,shift_z);
 	  ren->GetActiveCamera()->SetPosition(campos.at(pose).x*dist_cam_factor,campos.at(pose).z*dist_cam_factor,campos.at(pose).y*dist_cam_factor);
@@ -272,7 +273,7 @@ int main( int argc, char * argv [] )
 	  String filename = temp;
 	  filename += ".jpg";
 	  imglabel << filename << ' ' << label_class << endl;
-	  filename = imagedir_p + filename;
+	  filename = imagedir_p + '/' + filename;
 	  imReader->SetFileName(name_bkg_p.at(rand()%name_bkg_p.size()).c_str());
 	  /*if (view_region == 0) {
 		ren->ResetCamera();// set to a camera mode suit for object
@@ -284,16 +285,21 @@ int main( int argc, char * argv [] )
   
 	  iren->Initialize();
 	  /* Object */
+    if (pure_surface == 1) {
+      importer->SetFileNameMTL("");
+      importer->SetTexturePath("");
+      importer->Update();
+    }
     if (frontalLight == 1) {
       myLight->SetPosition(campos.at(pose).x*dist_cam_factor*10,campos.at(pose).z*dist_cam_factor*10,campos.at(pose).y*dist_cam_factor*10);
-      myLight->SetFocalPoint(0, 0, 0);
-      // myLight->SetFocalPoint(ren->GetActiveCamera()->GetFocalPoint());
+      // myLight->SetFocalPoint(0, 0, 0);
+      myLight->SetFocalPoint(ren->GetActiveCamera()->GetFocalPoint());
       myLight->SetIntensity(100);
     }
 	  filename = temp;
 	  filename += ".jpg";
 	  imglabel << filename << ' ' << label_class << endl;
-	  filename = imagedir_o + filename;
+	  filename = imagedir_o + '/' + filename;
 	  imReader->SetFileName(name_bkg_o.at(rand()%name_bkg_o.size()).c_str());
 	  /*if (view_region == 0) {
 		ren->ResetCamera();// set to a camera mode suit for object
