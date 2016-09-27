@@ -49,7 +49,7 @@ void listDir(const char *path, std::vector<String>& files, bool r)
 	}
 	else
 	{
-	  if (strcmp(ent->d_name, ".DS_Store") != 0)
+	  if (strcmp(ent->d_name, ".DS_Store") != 0 && strcmp(ent->d_name, "._.DS_Store") != 0)
 	  files.push_back(ent->d_name);
 	}
   }
@@ -64,10 +64,8 @@ int main( int argc, char * argv [] )
   "{mtlmodel | | Path of the '.mtl' file for image rendering. }"
   "{texmodel | | Path of the texture file for image rendering. }"
   "{imagedir_p | ../data/images_sp_photo/ | Path of the generated images for one particular .ply model. }"
-  "{imagedir_o | ../data/images_sp_object/ | Path of the generated images for one particular .ply model. }"
   "{labeldir | ../data/label_all.txt | Path of the generated images for one particular .ply model. }"
-  "{bakgrdir_p | /home/yida/Documents/database/backgrd_flickr/ | Path of the backgroud images sets. }"
-  "{bakgrdir_o | /home/yida/Documents/database/backgrd_black/ | Path of the backgroud images sets. }"
+  "{bakgrdir_p | /home/yida/Documents/database/backgrd_black/ | Path of the backgroud images sets. }"
   "{semisphere | 1 | Camera only has positions on half of the whole sphere. }"
   "{z_range | 0.6 | Maximum camera position on z axis. }"
   "{center_gen | 0 | Find center from all points. }"
@@ -77,7 +75,7 @@ int main( int argc, char * argv [] )
   "{rgb_use | 0 | Use RGB image or grayscale. }"
   "{num_class | 12 | Total number of classes of models. }"
   "{view_region | 0 | Take a special view of front or back angle}"
-  "{frontalLight | 1 | Frontal light to from camera}";
+  "{frontalLight | 0 | Frontal light to from camera}";
   /* Get parameters from comand line. */
   cv::CommandLineParser parser(argc, argv, keys);
   parser.about("Generating training data for CNN with triplet loss");
@@ -91,10 +89,8 @@ int main( int argc, char * argv [] )
   String mtlmodel = parser.get<String>("mtlmodel");
   String texmodel = parser.get<String>("texmodel");
   String imagedir_p = parser.get<String>("imagedir_p");
-  String imagedir_o = parser.get<String>("imagedir_o");
   string labeldir = parser.get<String>("labeldir");
   String bakgrdir_p = parser.get<string>("bakgrdir_p");
-  String bakgrdir_o = parser.get<string>("bakgrdir_o");
   int label_class = parser.get<int>("label_class");
   int label_item = parser.get<int>("label_item");
   int semisphere = parser.get<int>("semisphere");
@@ -106,7 +102,6 @@ int main( int argc, char * argv [] )
   int view_region = parser.get<int>("view_region");
   int frontalLight = parser.get<int>("frontalLight");
   double bg_dist, y_range;
-  int pure_surface = 0;
   y_range = 0.25;
   cv::cnn_3dobj::icoSphere ViewSphere(10,ite_depth);
   std::vector<cv::Point3d> campos;
@@ -179,141 +174,122 @@ int main( int argc, char * argv [] )
   vtkSmartPointer<vtkWindowToImageFilter> wintoimg = vtkSmartPointer<vtkWindowToImageFilter>::New();
   wintoimg->SetInput(renWin);
   writer->SetInputConnection(wintoimg->GetOutputPort());
-  vtkSmartPointer<vtkLight> myLight= vtkSmartPointer<vtkLight>::New();
-  myLight->SetIntensity(0);
+  vtkSmartPointer<vtkLight> myLightF= vtkSmartPointer<vtkLight>::New();
+  vtkSmartPointer<vtkLight> myLightB= vtkSmartPointer<vtkLight>::New();
+  myLightF->SetIntensity(10);
+  myLightB->SetIntensity(10);
+  myLightF->SetPosition(10, 10, 0);
+  myLightF->SetFocalPoint(ren->GetActiveCamera()->GetFocalPoint());
+  myLightB->SetPosition(-10, -10, 0);
+  myLightB->SetFocalPoint(ren->GetActiveCamera()->GetFocalPoint());
+  // myLightF->SetPosition(campos.at(pose).x*dist_cam_factor*10,campos.at(pose).z*dist_cam_factor*10,campos.at(pose).y*dist_cam_factor*10);
+  // myLightB->SetPosition(-campos.at(pose).x*dist_cam_factor*10,-campos.at(pose).z*dist_cam_factor*10,-campos.at(pose).y*dist_cam_factor*10);
+  double combi[6][3] = {{1,0,0},{0,1,0},{0,0,1},{1,1,0},{1,0,1},{0,1,1}};
   switch (label_class) {
     case 1:
-      myLight->SetColor(1,0,0);
+      myLightF->SetColor(combi[0]);// good
+      myLightB->SetColor(combi[1]);
       break; 
     case 2:
-      myLight->SetColor(0,1,0);
+      myLightF->SetColor(combi[1]);// good
+      myLightB->SetColor(combi[2]);
       break; 
     case 3:
-      myLight->SetColor(0,0,1);
+      myLightF->SetColor(combi[0]);// good
+      myLightB->SetColor(combi[3]);
       break; 
     case 4:
-      myLight->SetColor(1,1,0);
+      myLightF->SetColor(combi[4]);// good
+      myLightB->SetColor(combi[4]);
       break; 
     case 5:
-      myLight->SetColor(1,0,1);
+      myLightF->SetColor(combi[4]);//not good
+      myLightB->SetColor(combi[5]);
       break; 
     case 6:
-      myLight->SetColor(0,1,1);
+      myLightF->SetColor(combi[0]);// good
+      myLightB->SetColor(combi[2]);
       break; 
     case 7:
-      myLight->SetColor(1,0,0.5);
+      myLightF->SetColor(combi[1]);// good
+      myLightB->SetColor(combi[3]);
       break; 
     case 8:
-      myLight->SetColor(0,0.5,1);
+      myLightF->SetColor(combi[3]);// good
+      myLightB->SetColor(combi[3]);
       break; 
     case 9:
-      myLight->SetColor(0,1,0.5);
+      myLightF->SetColor(combi[1]);// good
+      myLightB->SetColor(combi[5]);
       break; 
     case 10:
-      myLight->SetColor(0.5,1,0);
+      myLightF->SetColor(combi[2]);// good
+      myLightB->SetColor(combi[4]);
       break; 
     case 11:
-      myLight->SetColor(1,0.5,0);
+      myLightF->SetColor(combi[0]);// good
+      myLightB->SetColor(combi[4]);
       break; 
     case 12:
-      myLight->SetColor(0.5,0,1);
+      myLightF->SetColor(combi[2]);// good
+      myLightB->SetColor(combi[5]);
       break; 
   }
 
-  if (frontalLight == 1) ren->AddLight(myLight);
+  if (frontalLight == 1) {
+    ren->AddLight(myLightF);
+    ren->AddLight(myLightB);
+  }
   
-  char temp[128];
+  char temp[32];
   char* bgname = new char;
-  std::vector<String> name_bkg_p, name_bkg_o;
-  std::fstream imglabel;
-  char* p=(char*)labeldir.data();
-  imglabel.open(p, fstream::app|fstream::out);
+  std::vector<String> name_bkg_p;
   if (bakgrdir_p.size() != 0)
   {
-	/* List the file names under a given path */
-	listDir(bakgrdir_p.c_str(), name_bkg_p, false);
-	for (unsigned int i = 0; i < name_bkg_p.size(); i++)
-	{
-	  name_bkg_p.at(i) = bakgrdir_p + name_bkg_p.at(i);
-	}
-  }
-  if (bakgrdir_o.size() != 0)
-  {
-	/* List the file names under a given path */
-	listDir(bakgrdir_o.c_str(), name_bkg_o, false);
-	for (unsigned int i = 0; i < name_bkg_o.size(); i++)
-	{
-	  name_bkg_o.at(i) = bakgrdir_o + name_bkg_o.at(i);
-	}
+  	/* List the file names under a given path */
+  	listDir(bakgrdir_p.c_str(), name_bkg_p, false);
+  	for (unsigned int i = 0; i < name_bkg_p.size(); i++)
+  	{
+  	  name_bkg_p.at(i) = bakgrdir_p + name_bkg_p.at(i);
+  	}
   }
   /* Images will be saved as .png files. */
   int cnt_img;
   /* Real random related to time */
-  srand((int)time(0));
+  // srand((int)time(0));
+  srand(1);
   double dist_shift_factor=0.04, shift_x, shift_y, shift_z, dist_cam_factor;
   do
   {
 	cnt_img = 0;
 	for(int pose = 0; pose < static_cast<int>(campos.size()); pose++){
+      iren->Initialize();
 	  int label_x, label_y, label_z;
 	  label_x = static_cast<int>(campos.at(pose).x*100);
 	  label_y = static_cast<int>(campos.at(pose).y*100);
 	  label_z = static_cast<int>(campos.at(pose).z*100);
-	  shift_x = (rand()%13-6)*dist_shift_factor;
-	  shift_y = (rand()%13-6)*dist_shift_factor;
-	  shift_z = (rand()%13-6)*dist_shift_factor;
-    dist_cam_factor = (rand()%5+11)/5;
+	  shift_x = (rand()%7-3)*dist_shift_factor;
+	  shift_y = (rand()%7-3)*dist_shift_factor;
+	  shift_z = (rand()%7-3)*dist_shift_factor;
+      dist_cam_factor = (rand()%5+11)/5;
 	  ren->GetActiveCamera()->SetFocalPoint(shift_x,shift_y,shift_z);
 	  ren->GetActiveCamera()->SetPosition(campos.at(pose).x*dist_cam_factor,campos.at(pose).z*dist_cam_factor,campos.at(pose).y*dist_cam_factor);
-	  if (frontalLight == 1) {
-  		myLight->SetIntensity(0);
-	  }
+
 	  sprintf (temp,"%02i_%02i_%03i", label_class, label_item, cnt_img);
-	  /* Photo */
-	  String filename = temp;
+      String filename = temp;
+
 	  filename += ".jpg";
-	  imglabel << filename << ' ' << label_class << endl;
 	  filename = imagedir_p + '/' + filename;
-	  imReader->SetFileName(name_bkg_p.at(rand()%name_bkg_p.size()).c_str());
-	  /*if (view_region == 0) {
-		ren->ResetCamera();// set to a camera mode suit for object
-	  }*/
+	  imReader->SetFileName(name_bkg_p.at(rand()%(name_bkg_p.size() - 1)).c_str());
 	  wintoimg->Modified();
 	  wintoimg->Update();
 	  writer->SetFileName(filename.c_str());
 	  writer->Write();
+      iren->Initialize();
   
-	  iren->Initialize();
-	  /* Object */
-    if (pure_surface == 1) {
-      importer->SetFileNameMTL("");
-      importer->SetTexturePath("");
-      importer->Update();
-    }
-    if (frontalLight == 1) {
-      myLight->SetPosition(campos.at(pose).x*dist_cam_factor*10,campos.at(pose).z*dist_cam_factor*10,campos.at(pose).y*dist_cam_factor*10);
-      // myLight->SetFocalPoint(0, 0, 0);
-      myLight->SetFocalPoint(ren->GetActiveCamera()->GetFocalPoint());
-      myLight->SetIntensity(100);
-    }
-	  filename = temp;
-	  filename += ".jpg";
-	  imglabel << filename << ' ' << label_class << endl;
-	  filename = imagedir_o + '/' + filename;
-	  imReader->SetFileName(name_bkg_o.at(rand()%name_bkg_o.size()).c_str());
-	  /*if (view_region == 0) {
-		ren->ResetCamera();// set to a camera mode suit for object
-	  }*/
-	  wintoimg->Modified();
-	  wintoimg->Update();
-	  writer->SetFileName(filename.c_str());
-	  writer->Write();
-  
-	  iren->Initialize();
 	  //iren->NewInstance();
 	  cnt_img++;
 	}
   } while (cnt_img != campos.size());
-  imglabel.close();
   return 1;
 }
