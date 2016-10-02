@@ -37,7 +37,10 @@ void listDir(const char *path, std::vector<String>& files, bool r)
   {
 	if (ent->d_type & DT_DIR)
 	{
-	  if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0 || strcmp(ent->d_name, ".DS_Store") == 0 || strcmp(ent->d_name, "._.DS_Store") == 0)
+	  if (strcmp(ent->d_name, ".") == 0 ||
+        strcmp(ent->d_name, "..") == 0 ||
+        strcmp(ent->d_name, ".DS_Store") == 0 ||
+        strcmp(ent->d_name, "._.DS_Store") == 0)
 	  {
 		continue;
 	  }
@@ -49,7 +52,8 @@ void listDir(const char *path, std::vector<String>& files, bool r)
 	}
 	else
 	{
-	  if (strcmp(ent->d_name, ".DS_Store") != 0 && strcmp(ent->d_name, "._.DS_Store") != 0)
+	  if (strcmp(ent->d_name, ".DS_Store") != 0 &&
+        strcmp(ent->d_name, "._.DS_Store") != 0)
 	  files.push_back(ent->d_name);
 	}
   }
@@ -101,7 +105,7 @@ int main( int argc, char * argv [] )
   int frontalLight = parser.get<int>("frontalLight");
   double bg_dist, y_range;
   y_range = 0.25;
-  cv::cnn_3dobj::icoSphere ViewSphere(10,ite_depth);
+  icoSphere ViewSphere(10,ite_depth);
   std::vector<cv::Point3d> campos;
   std::vector<cv::Point3d> campos_temp = ViewSphere.CameraPos;
   /* Regular objects on the ground using a semisphere view system */

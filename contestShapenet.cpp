@@ -19,14 +19,13 @@
 #include "vtkTexture.h"
 #include "vtkWindowToImageFilter.h"
 #include "vtksys/SystemTools.hxx"
-#include <opencv2/cnn_3dobj.hpp>
 #include <opencv2/viz/vizcore.hpp>
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include "sphereview.hpp"
 using namespace cv;
 using namespace std;
-using namespace cv::cnn_3dobj;
 
 void listDir(const char *path, std::vector<String>& files, bool r)
 {
@@ -99,7 +98,7 @@ int main( int argc, char * argv [] )
   } else {
   	cam_up = (Mat_<int>(1,3) << 0, 1, 0);
   }
-  cv::cnn_3dobj::icoSphere ViewSphere(10,ite_depth);
+  icoSphere ViewSphere(10,ite_depth);
   std::vector<cv::Point3d> campos = ViewSphere.CameraPos;
   // Reader of OBJ file
   std::string filenameOBJ(objmodel);
@@ -110,7 +109,7 @@ int main( int argc, char * argv [] )
   vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection(reader->GetOutputPort());
   mapper->ScalarVisibilityOn();
-  
+
   // Create the actor.
   vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
   actor->SetMapper(mapper);
@@ -134,7 +133,7 @@ int main( int argc, char * argv [] )
   vtkSmartPointer<vtkWindowToImageFilter> wintoimg = vtkSmartPointer<vtkWindowToImageFilter>::New();
   wintoimg->SetInput(renWin);
   writer->SetInputConnection(wintoimg->GetOutputPort());
-  
+
   char temp[128];
   char* bgname = new char;
   std::vector<String> name_bkg;
@@ -178,7 +177,7 @@ int main( int argc, char * argv [] )
 	  	writer->Write();
 	  	cv::Mat grayimg = cv::imread(filename,0);
 	  	cv::imwrite(filename,grayimg);
-  
+
 	  	iren->Initialize();
 	  	cnt_img++;
 	  }

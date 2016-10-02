@@ -42,7 +42,10 @@ void listDir(const char *path, std::vector<String>& files, bool r)
   {
 	if (ent->d_type & DT_DIR)
 	{
-	  if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0 || strcmp(ent->d_name, ".DS_Store") == 0 || strcmp(ent->d_name, "._.DS_Store") == 0)
+	  if (strcmp(ent->d_name, ".") == 0 ||
+        strcmp(ent->d_name, "..") == 0 ||
+        strcmp(ent->d_name, ".DS_Store") == 0 ||
+        strcmp(ent->d_name, "._.DS_Store") == 0)
 	  {
 		continue;
 	  }
@@ -54,7 +57,8 @@ void listDir(const char *path, std::vector<String>& files, bool r)
 	}
 	else
 	{
-	  if (strcmp(ent->d_name, ".DS_Store") != 0 && strcmp(ent->d_name, "._.DS_Store") != 0)
+	  if (strcmp(ent->d_name, ".DS_Store") != 0 &&
+        strcmp(ent->d_name, "._.DS_Store") != 0)
 	  files.push_back(ent->d_name);
 	}
   }
@@ -69,7 +73,7 @@ int main( int argc, char * argv [] )
   "{mtlmodel | | Path of the '.mtl' file for image rendering. }"
   "{texmodel | | Path of the texture file for image rendering. }"
   "{imagedir_p | ../data/images_sp_photo/ | Path of the generated images for one particular .ply model. }"
-  "{bakgrdir_p | /home/yida/Documents/database/backgrd_black/ | Path of the backgroud images sets. }"
+  "{bakgrdir_p | /Users/yidawang/Documents/database/backgrd_black/ | Path of the backgroud images sets. }"
   "{semisphere | 1 | Camera only has positions on half of the whole sphere. }"
   "{z_range | 0.6 | Maximum camera position on z axis. }"
   "{center_gen | 0 | Find center from all points. }"
@@ -106,7 +110,7 @@ int main( int argc, char * argv [] )
   int frontalLight = parser.get<int>("frontalLight");
   double bg_dist, y_range;
   y_range = 0.25;
-  cv::cnn_3dobj::icoSphere ViewSphere(10,ite_depth);
+  icoSphere ViewSphere(10,ite_depth);
   std::vector<cv::Point3d> campos;
   std::vector<cv::Point3d> campos_temp = ViewSphere.CameraPos;
   /* Regular objects on the ground using a semisphere view system */
@@ -181,7 +185,7 @@ int main( int argc, char * argv [] )
 
   vtkSmartPointer<vtkActor> lightFocalPointActor = vtkSmartPointer<vtkActor>::New();
   lightFocalPointActor->SetMapper(lightFocalPointMapper);
-  double combi[12][3] = {{1,0,0},{0,1,0},{0,0,1},{0.75,0.75,0.75},{1,0,1},{0.52,0.149,0.34},{1,0.6,0.1},{1,1,0},{0.5,1,0.83},{0.73,0.56,0.56},{0.5,0,1},{0,1,1}};
+  double combi[12][3] = {{1,0,0},{0,1,0},{0,0,1},{0.75,0.75,0.75},{1,0,1},{0.52,0.149,0.34},{1,0.6,0.1},{1,1,0},{0.19,0.5,0.08},{0.73,0.56,0.56},{0.5,0,1},{0,1,1}};
   switch (label_class) {
     case 1:
       lightFocalPointActor->GetProperty()->SetColor(combi[0]);
@@ -223,7 +227,7 @@ int main( int argc, char * argv [] )
 
   ren->AddViewProp(lightFocalPointActor);
 
-  char temp[32];
+  char temp[128];
   char* bgname = new char;
   /* Images will be saved as .png files. */
   /* Real random related to time */
