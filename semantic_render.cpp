@@ -181,7 +181,7 @@ int main( int argc, char * argv [] )
 
   vtkSmartPointer<vtkActor> lightFocalPointActor = vtkSmartPointer<vtkActor>::New();
   lightFocalPointActor->SetMapper(lightFocalPointMapper);
-  double combi[12][3] = {{1,0,0},{0,1,0},{0,0,1},{1,1,0},{1,0,1},{0.85,0.44,0.84},{1,0.38,0},{0.75,0.75,0.75},{0.5,1,0.83},{0.73,0.56,0.56},{0.5,0,1},{0,1,1}};
+  double combi[12][3] = {{1,0,0},{0,1,0},{0,0,1},{0.75,0.75,0.75},{1,0,1},{0.52,0.149,0.34},{1,0.6,0.1},{1,1,0},{0.5,1,0.83},{0.73,0.56,0.56},{0.5,0,1},{0,1,1}};
   switch (label_class) {
     case 1:
       lightFocalPointActor->GetProperty()->SetColor(combi[0]);
