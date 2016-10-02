@@ -1,8 +1,24 @@
+# parameter setting
 rootmodel="/home/yida/Downloads/shapenet/ShapeNetCore.v1/collection/"
 rootback_o="/home/yida/Documents/database/backgrd_black/"
 targetimage_o="../data/images_sp_object/"
 rootback_p="/home/yida/Documents/database/backgrd_flickr/"
 targetimage_p="../data/images_sp_photo/"
+
+# making directories
+strings="aeroplane bottle chair sofa bicycle bus diningtable train boat car motorbike tvmonitor"
+cat_array=($strings)
+for i in $(seq 12)
+do
+	if [ ! -d ../data/images_sp_object/${cat_array[i-1]} ]; then
+		mkdir ../data/images_sp_object/${cat_array[i-1]}
+	fi
+	if [ ! -d ../data/images_sp_photo/${cat_array[i-1]} ]; then
+		mkdir ../data/images_sp_photo/${cat_array[i-1]}
+	fi
+done
+
+# rendering
 for i in $(seq 50)
 do
 	./pose_render -objmodel=${rootmodel}aeroplane/${i}/model.obj -mtlmodel=${rootmodel}aeroplane/${i}/model.mtl -texmodel=${rootmodel}aeroplane/${i} -label_class=1 -label_item=${i} -bakgrdir_p=${rootback_p}aeroplane_sky/ -semisphere=0 -imagedir_p=${targetimage_p}aeroplane -frontalLight=0
