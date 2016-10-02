@@ -6,7 +6,7 @@ rootback_p="/Users/yidawang/Documents/database/backgrd_flickr/"
 targetimage_p="../data/images_sp_photo/"
 
 # making directories
-strings="aeroplane bottle chair sofa bicycle bus diningtable train boat car motorbike tvmonitor"
+strings="aeroplane bicycle boat bottle bus car chair diningtable motorbike sofa train monitor"
 cat_array=($strings)
 for i in $(seq 12)
 do
