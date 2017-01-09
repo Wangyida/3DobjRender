@@ -232,7 +232,7 @@ int main( int argc, char * argv [] )
   /* Images will be saved as .png files. */
   /* Real random related to time */
   // srand((int)time(0));
-  srand(1);
+  srand(label_item);
   double dist_shift_factor=0.04, shift_x, shift_y, shift_z, dist_cam_factor;
 	for(int pose = 0; pose < static_cast<int>(campos.size()); pose++){
     iren->Initialize();
