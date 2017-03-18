@@ -14,6 +14,7 @@
 #include "vtkJPEGReader.h"
 #include "vtkImageCanvasSource2D.h"
 #include "vtkImageCast.h"
+#include <vtkImageShiftScale.h>
 #include <vtkProperty.h>
 #include <vtkActor.h>
 #include <vtkLight.h>
@@ -143,98 +144,112 @@ int main( int argc, char * argv [] )
     }
   }
 
+  // Step 1: Reader is the tool to load the poly files
   vtkSmartPointer<vtkOBJReader> reader =
     vtkSmartPointer<vtkOBJReader>::New();
   reader->SetFileName(objmodel.c_str());
   reader->Update();
 
-  vtkSmartPointer<vtkPolyDataMapper> mapper =
-    vtkSmartPointer<vtkPolyDataMapper>::New();
-  mapper->SetInputConnection(reader->GetOutputPort());
 
+  // Step 2: Build visualization enviroment:
+  // Mapper loads what reader recorded
+  vtkSmartPointer<vtkPolyDataMapper> ObjectMapper =
+    vtkSmartPointer<vtkPolyDataMapper>::New();
+  ObjectMapper->SetInputConnection(reader->GetOutputPort());
+
+  // Step 3: Actor set target on Mapper,
+  // this is what we use for further operation on mesh
   vtkSmartPointer<vtkActor> actor =
     vtkSmartPointer<vtkActor>::New();
-  actor->SetMapper(mapper);
+  actor->SetMapper(ObjectMapper);
 
-  vtkSmartPointer<vtkRenderer> ren = vtkSmartPointer<vtkRenderer>::New();
-  vtkSmartPointer<vtkRenderWindow> renWin = vtkSmartPointer<vtkRenderWindow>::New();
-  vtkSmartPointer<vtkRenderWindowInteractor> iren = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-  renWin->AddRenderer(ren);
+  // Step 4: Start the main task for rendering
+  // Step 4(1): Render operates on -> Actor
+  vtkSmartPointer<vtkRenderer> ren =
+    vtkSmartPointer<vtkRenderer>::New();
   ren->AddActor(actor);
   ren->TexturedBackgroundOn();
   ren->GetActiveCamera()->SetViewUp(0,1,0);
-  iren->SetRenderWindow(renWin);
+  // Step 4(2): RenderWindow operates on -> Render
+  vtkSmartPointer<vtkRenderWindow> renWin =
+    vtkSmartPointer<vtkRenderWindow>::New();
+  renWin->AddRenderer(ren);
   renWin->SetSize(227,227);
+  // Step 4(3): Interactor operates  on -> RenderWindow
+  vtkSmartPointer<vtkRenderWindowInteractor> iren =
+    vtkSmartPointer<vtkRenderWindowInteractor>::New();
+  iren->SetRenderWindow(renWin);
   renWin->Render();
-  vtkSmartPointer<vtkJPEGReader> imReader = vtkSmartPointer<vtkJPEGReader>::New();
-  vtkSmartPointer<vtkTexture> atext = vtkSmartPointer<vtkTexture>::New();
+
+  // Step 5: Define details for rendering
+  vtkSmartPointer<vtkJPEGReader> imReader =
+    vtkSmartPointer<vtkJPEGReader>::New();
+  vtkSmartPointer<vtkTexture> atext =
+    vtkSmartPointer<vtkTexture>::New();
   atext->SetInputConnection(imReader->GetOutputPort());
   atext->InterpolateOn();
   ren->SetBackground(0,0,0);
-  ren->SetBackgroundTexture(atext); //add background
-  vtkSmartPointer<vtkJPEGWriter> writer = vtkSmartPointer<vtkJPEGWriter>::New();
-  vtkSmartPointer<vtkWindowToImageFilter> wintoimg = vtkSmartPointer<vtkWindowToImageFilter>::New();
+  ren->SetBackgroundTexture(atext);
+  // Add a writter
+  vtkSmartPointer<vtkJPEGWriter> writer =
+    vtkSmartPointer<vtkJPEGWriter>::New();
+  vtkSmartPointer<vtkWindowToImageFilter> wintoimg =
+    vtkSmartPointer<vtkWindowToImageFilter>::New();
   wintoimg->SetInput(renWin);
   writer->SetInputConnection(wintoimg->GetOutputPort());
   //myLightB->SetIntensity(10);
   //myLightF->SetPosition(10, 10, 0);
-  vtkSmartPointer<vtkLightActor> lightActor = vtkSmartPointer<vtkLightActor>::New();
-  vtkSmartPointer<vtkPolyDataMapper> lightFocalPointMapper =
+
+  string render_type = "SemanticMask";
+  if (render_type == "SemanticMask") {
+    vtkSmartPointer<vtkLightActor> lightActor =
+      vtkSmartPointer<vtkLightActor>::New();
+    // There is another matter for the light
+    vtkSmartPointer<vtkPolyDataMapper> lightMapper =
       vtkSmartPointer<vtkPolyDataMapper>::New();
-  lightFocalPointMapper->SetInputConnection(reader->GetOutputPort());
+    lightMapper->SetInputConnection(reader->GetOutputPort());
 
-  vtkSmartPointer<vtkActor> lightFocalPointActor = vtkSmartPointer<vtkActor>::New();
-  lightFocalPointActor->SetMapper(lightFocalPointMapper);
-  double combi[12][3] = {{1,0,0},{0,1,0},{0,0,1},{0.75,0.75,0.75},{1,0,1},{0.52,0.149,0.34},{1,0.6,0.1},{1,1,0},{0.19,0.5,0.08},{0.73,0.56,0.56},{0.5,0,1},{0,1,1}};
-  switch (label_class) {
-    case 1:
-      lightFocalPointActor->GetProperty()->SetColor(combi[0]);
-      break;
-    case 2:
-      lightFocalPointActor->GetProperty()->SetColor(combi[1]);
-      break;
-    case 3:
-      lightFocalPointActor->GetProperty()->SetColor(combi[2]);
-      break;
-    case 4:
-      lightFocalPointActor->GetProperty()->SetColor(combi[3]);
-      break;
-    case 5:
-      lightFocalPointActor->GetProperty()->SetColor(combi[4]);
-      break;
-    case 6:
-      lightFocalPointActor->GetProperty()->SetColor(combi[5]);
-      break;
-    case 7:
-      lightFocalPointActor->GetProperty()->SetColor(combi[6]);
-      break;
-    case 8:
-      lightFocalPointActor->GetProperty()->SetColor(combi[7]);
-      break;
-    case 9:
-      lightFocalPointActor->GetProperty()->SetColor(combi[8]);
-      break;
-    case 10:
-      lightFocalPointActor->GetProperty()->SetColor(combi[9]);
-      break;
-    case 11:
-      lightFocalPointActor->GetProperty()->SetColor(combi[10]);
-      break;
-    case 12:
-      lightFocalPointActor->GetProperty()->SetColor(combi[11]);
-      break;
+    // Set another actor on Light mapper
+    vtkSmartPointer<vtkActor> renActor =
+      vtkSmartPointer<vtkActor>::New();
+    renActor->SetMapper(lightMapper);
+    double combi[12][3] =
+      {{1,0,0},{0,1,0},{0,0,1},
+       {0.75,0.75,0.75},{1,0,1},{0.52,0.149,0.34},
+       {1,0.6,0.1},{1,1,0},{0.19,0.5,0.08},
+       {0.73,0.56,0.56},{0.5,0,1},{0,1,1}};
+
+    // Set unique colors to different categories
+    renActor->GetProperty()->SetColor(combi[label_class-1]);
+    // Set the opacity of the surface color
+    renActor->GetProperty()->SetOpacity(1);
+    ren->AddViewProp(renActor);
+  } else if (render_type == "DepthImage") {
+    // This code is under remaining
+    vtkSmartPointer<vtkImageShiftScale> scale =
+      vtkSmartPointer<vtkImageShiftScale>::New();
+    // Create Depth Map
+    wintoimg->SetMagnification(1);
+
+    // Extract z buffer value
+    wintoimg->SetInputBufferTypeToZBuffer();
+
+    scale->SetOutputScalarTypeToUnsignedChar();
+    scale->SetInputConnection(wintoimg->GetOutputPort());
+    scale->SetShift(0);
+    scale->SetScale(-255); // Set it to 1 could produce an interesting result
+    writer->SetInputConnection(scale->GetOutputPort());
   }
-
-  ren->AddViewProp(lightFocalPointActor);
 
   char temp[128];
   char* bgname = new char;
-  /* Images will be saved as .png files. */
+
+  /* Images will be saved as .jpg files. */
   /* Real random related to time */
   // srand((int)time(0));
   srand(label_item);
   double dist_shift_factor=0.04, shift_x, shift_y, shift_z, dist_cam_factor;
-	for(int pose = 0; pose < static_cast<int>(campos.size()); pose++){
+	for(int pose = 0; pose < static_cast<int>(campos.size()); pose++) {
     iren->Initialize();
 	  int label_x, label_y, label_z;
 	  label_x = static_cast<int>(campos.at(pose).x*100);
@@ -251,7 +266,7 @@ int main( int argc, char * argv [] )
 	  wintoimg->Modified();
 	  wintoimg->Update();
 
-	  sprintf (temp,"%02i_%02i_%03i", label_class, label_item, pose);
+	  sprintf (temp, "%02i_%02i_%03i", label_class, label_item, pose);
     String filename = temp;
 	  filename += ".jpg";
 	  filename = imagedir_p + '/' + filename;
